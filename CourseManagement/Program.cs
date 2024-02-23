@@ -1,6 +1,5 @@
 using CourseManagement.DataAccessLayer;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
+using CourseManagement.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,9 +8,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
-builder.Services.AddDbContext<ApplicationDbContext> (option => 
-    option.UseSqlServer(builder.Configuration.GetConnectionString("Default"))
-);
+builder.Services.AddDbContext<ApplicationDbContext>(option =>
+    option.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+
+builder.Services.AddScoped<ICourseService, CourseService>();
 
 var app = builder.Build();
 

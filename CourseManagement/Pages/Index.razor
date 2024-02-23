@@ -1,8 +1,70 @@
 ﻿@page "/"
+@inject ICourseService CourseService
+@inject NavigationManager NavigationManager
 
 <PageTitle>Index</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>Available courses:</h1>
 
-Welcome to your new app.
+<button class="btn btn-primary" @onclick="(() => CreateCourse())">
+    <i class="oi oi-plus"></i>
+</button>
 
+
+@if (courses == null)
+{
+    <span>Loading...</span>
+}
+else if (courses.Count > 0)
+{
+    <table class="table mt-5">
+        <thead>
+            <tr>
+                <th>Course title</th>
+                <th>Course date</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var course in courses)
+            {
+                <tr>
+                    <td>@course.CourseTitle</td>
+                    <td>@course.CourseStartDateTime.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="(() => ShowCourse(course.Id))">
+                            <i class="oi oi-pencil"></i>
+                        </button>
+                        <button class="btn btn-danger">
+                            <i class="oi oi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <span>There are no courses to display.</span>
+}
+
+@code
+{
+    List<Course>? courses = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        courses = await CourseService.GetAllCourses();
+    }
+
+    void ShowCourse(int id)
+    {
+        NavigationManager.NavigateTo($"course-edit/{id}");
+    }
+
+    void CreateCourse()
+    {
+        NavigationManager.NavigateTo("course-edit");
+    }
+}
