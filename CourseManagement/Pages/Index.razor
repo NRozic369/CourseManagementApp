@@ -26,6 +26,7 @@ else if (courses.Count > 0)
                 <th>Course title</th>
                 <th>Course date</th>
                 <th></th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -43,6 +44,11 @@ else if (courses.Count > 0)
                         </button>
                         <button class="btn btn-danger" @onclick="(() => DeleteCourse(course.Id))">
                             <i class="oi oi-trash"></i>
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn btn-success" @onclick="(() => JoinCourse(course.Id))">
+                            <i class="oi oi-person"></i>
                         </button>
                     </td>
                 </tr>
@@ -83,5 +89,10 @@ else
     {
         await CourseService.DeleteCourse(id);
         NavigationManager.NavigateTo("/", true);
+    }
+
+    private void JoinCourse(int id)
+    {
+        NavigationManager.NavigateTo($"course-join/{id}");
     }
 }

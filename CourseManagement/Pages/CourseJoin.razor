@@ -1,0 +1,52 @@
+﻿@page "/course-join/{courseid:int}"
+@inject ICourseService CourseService
+@inject IAttendeeService AttendeeService
+@inject NavigationManager NavigationManager
+
+
+<h1>Join <b>@course.CourseTitle</b></h1>
+<hr />
+
+<EditForm Model="attendee" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="mb-3">
+        <label for="FirstName">First name</label>
+        <InputText id="FirstName" @bind-Value="attendee.FirstName" class="form-control"></InputText>
+    </div>
+    <div class="mb-3">
+        <label for="LastName">Last name</label>
+        <InputText id="LastName" @bind-Value="attendee.LastName" class="form-control"></InputText>
+    </div>
+    <div class="mb-3">
+        <label for="Email">Email</label>
+        <InputText id="Email" @bind-Value="attendee.Email" class="form-control"></InputText>
+    </div>
+    <br />
+    <button type="submit" class="btn btn-primary">Join</button>
+
+</EditForm>
+
+@code {
+    [Parameter]
+    public int CourseId { get; set; }
+
+    Attendee attendee = new Attendee();
+
+    Course course = new Course();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        course = await CourseService.GetCourseById(CourseId);
+        attendee.CourseId = CourseId;
+    }
+
+    private async Task HandleSubmit()
+    {
+        if(await AttendeeService.CheckIfAttendeeExists(CourseId, attendee.FirstName, attendee.LastName, attendee.Email) == false)
+        {
+            await AttendeeService.CreateAttendee(attendee);
+            NavigationManager.NavigateTo("/");
+        }
+    }
+}
