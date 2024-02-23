@@ -11,22 +11,27 @@ else
 {
     <h1>Edit @course.CourseTitle course</h1>
 }
+<hr />
 
 <EditForm Model="course" OnValidSubmit="HandleSubmit">
     <DataAnnotationsValidator />
     <ValidationSummary />
-    <div>
+    <div class="mb-3">
         <label for="Title">Course title</label>
         <InputText id="Title" @bind-Value="course.CourseTitle" class="form-control"></InputText>
     </div>
-      <div>
+    <div class="mb-3">
         <label for="Description">Course description</label>
         <InputTextArea id="Description" @bind-Value="course.CourseDescription" class="form-control"></InputTextArea>
     </div>
-    <div>
+    <div class="row mb-3">
         <label for="Date">Course date</label>
-        <InputDate id="Date" @bind-Value="course.CourseStartDateTime" class="form-control"></InputDate>
-        <InputDate id="Date" @bind-Value="course.CourseStartDateTime" Type="InputDateType.Time"></InputDate>
+        <div class="col-4">
+            <InputDate id="Date" @bind-Value="course.CourseStartDateTime" class="form-control" Type="InputDateType.Date"></InputDate>
+        </div>
+        <div class="col-2">
+            <InputDate id="Date" @bind-Value="course.CourseStartDateTime" class="form-control" Type="InputDateType.Time"></InputDate>
+        </div>
     </div>
     <br />
     <button type="submit" class="btn btn-primary">@btnText</button>

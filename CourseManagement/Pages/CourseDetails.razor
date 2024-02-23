@@ -1,0 +1,32 @@
+﻿@page "/course-details/{id:int}"
+@inject ICourseService CourseService
+
+<h1>Course details</h1>
+<hr />
+
+<div style="font-size:large">
+    <div class="row mb-5">
+        <div class="col-2">Course title:</div>
+        <div class="col-6" style="margin-left:25px;">@course.CourseTitle</div>
+    </div>
+    <div class="row mb-5">
+        <div class="col-2">Course description:</div>
+        <div class="col-8" style="margin-left:25px;">@course.CourseDescription</div>
+    </div>
+    <div class="row mb-5">
+        <div class="col-2">Course date:</div>
+        <div class="col-6" style="margin-left:25px;">@course.CourseStartDateTime</div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    Course course = new Course();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        course = await CourseService.GetCourseById(Id);
+    }
+}

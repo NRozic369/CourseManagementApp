@@ -4,12 +4,15 @@
 
 <PageTitle>Index</PageTitle>
 
-<h1>Available courses:</h1>
-
-<button class="btn btn-primary" @onclick="(() => CreateCourse())">
-    <i class="oi oi-plus"></i>
-</button>
-
+<div style="display: flex">
+    <h1 style="margin: 0">
+        Available courses
+    </h1>
+    <button class="btn btn-primary" @onclick="(() => CreateCourse())" style="margin-left: auto">
+        Create new course
+    </button>
+</div>
+<hr />
 
 @if (courses == null)
 {
@@ -32,10 +35,13 @@ else if (courses.Count > 0)
                     <td>@course.CourseTitle</td>
                     <td>@course.CourseStartDateTime.ToString("dd/MM/yyyy HH:mm")</td>
                     <td>
-                        <button class="btn btn-primary" @onclick="(() => ShowCourse(course.Id))">
+                        <button class="btn btn-info" @onclick="(() => ShowCourseDetails(course.Id))">
+                            <i class="oi oi-magnifying-glass"></i>
+                        </button>
+                        <button class="btn btn-primary" @onclick="(() => EditCourse(course.Id))">
                             <i class="oi oi-pencil"></i>
                         </button>
-                        <button class="btn btn-danger">
+                        <button class="btn btn-danger" @onclick="(() => DeleteCourse(course.Id))">
                             <i class="oi oi-trash"></i>
                         </button>
                     </td>
@@ -58,13 +64,24 @@ else
         courses = await CourseService.GetAllCourses();
     }
 
-    void ShowCourse(int id)
+    private void ShowCourseDetails(int id)
+    {
+        NavigationManager.NavigateTo($"course-details/{id}");
+    }
+
+    private void EditCourse(int id)
     {
         NavigationManager.NavigateTo($"course-edit/{id}");
     }
 
-    void CreateCourse()
+    private void CreateCourse()
     {
         NavigationManager.NavigateTo("course-edit");
+    }
+
+    private async Task DeleteCourse(int id)
+    {
+        await CourseService.DeleteCourse(id);
+        NavigationManager.NavigateTo("/", true);
     }
 }
