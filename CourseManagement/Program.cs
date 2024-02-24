@@ -1,3 +1,4 @@
+using Blazored.Toast;
 using CourseManagement.DataAccessLayer;
 using CourseManagement.Services;
 using Microsoft.EntityFrameworkCore;
@@ -7,12 +8,14 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+builder.Services.AddBlazoredToast();
 
 builder.Services.AddDbContext<ApplicationDbContext>(option =>
     option.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<IAttendeeService, AttendeeService>();
+
 
 var app = builder.Build();
 

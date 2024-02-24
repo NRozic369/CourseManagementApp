@@ -2,6 +2,7 @@
 @page "/course-edit/{id:int}"
 @inject ICourseService CourseService
 @inject IAttendeeService AttendeeService
+@inject IToastService ToastService
 @inject NavigationManager NavigationManager
 
 @if (Id == null)
@@ -87,6 +88,8 @@ else
 
     Course course = new Course();
 
+    Attendee attendee = new Attendee();
+
     protected override async Task OnParametersSetAsync()
     {
         if (Id != null)
@@ -106,10 +109,12 @@ else
         if (Id == null)
         {
             await CourseService.CreateCourse(course);
+            ToastService.ShowSuccess("Course was succesfully created!");
         }
         else
         {
             await CourseService.UpdateCourse((int)Id, course);
+            ToastService.ShowSuccess("Course was succesfully updated!");
         }
         NavigationManager.NavigateTo("/");
     }
@@ -122,6 +127,7 @@ else
     private async void DeleteAttendee(int Id)
     {
         await AttendeeService.DeleteAttendee(Id);
+        ToastService.ShowSuccess("Attendee was succesfully deleted!");
         NavigationManager.NavigateTo($"/course-edit/{course.Id}", true);
     }
 }

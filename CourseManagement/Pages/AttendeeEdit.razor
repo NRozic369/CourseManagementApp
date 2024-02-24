@@ -1,5 +1,6 @@
 ﻿@page "/attendee-edit/{id:int}"
 @inject IAttendeeService AttendeeService
+@inject IToastService ToastService
 @inject NavigationManager NavigationManager
 
 <h1>Edit attendee</h1>
@@ -39,6 +40,7 @@
     private async void HandleSubmit()
     {
         await AttendeeService.UpdateAttendee(Id, attendee);
+        ToastService.ShowSuccess("Attendee was succesfully updated!");
         NavigationManager.NavigateTo($"/course-edit/{attendee.CourseId}");
     }
 }
