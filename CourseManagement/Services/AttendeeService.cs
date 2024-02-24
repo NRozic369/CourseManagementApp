@@ -35,17 +35,31 @@ namespace CourseManagement.Services
             await _context.SaveChangesAsync();
         }
 
+        public async Task<Attendee> GetAttendeeById(int id)
+        {
+            var attendee = await _context.Attendees.FindAsync(id);
+            return attendee;
+        }
+
         public async Task<List<Attendee>> GetAttendeesByCourseId(int id)
         {
             var attendees = await _context.Attendees.Where(x => x.CourseId == id).ToListAsync();
             return attendees;
         }
 
-        public Task UpdateAttendee(int id, Attendee attendee)
+        public async Task UpdateAttendee(int id, Attendee attendee)
         {
-            throw new NotImplementedException();
+            var attendeeToUpdate = await _context.Attendees.FindAsync(id);
+            if (attendeeToUpdate == null)
+            {
+                throw new Exception("Selected attendee not found.");
+            }
+
+            attendeeToUpdate.FirstName = attendee.FirstName;
+            attendeeToUpdate.LastName = attendee.LastName;
+            attendeeToUpdate.Email = attendee.Email;
+
+            await _context.SaveChangesAsync();
         }
-
-
     }
 }

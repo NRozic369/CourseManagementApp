@@ -38,7 +38,7 @@ namespace CourseManagement.Services
 
         public async Task<Course> GetCourseById(int id)
         {
-            var course = await _context.Courses.FindAsync(id);
+            var course = await _context.Courses.Include(x => x.CourseAttendees).FirstOrDefaultAsync(x => x.Id == id);
             if (course == null)
             {
                 throw new Exception("Selected course cannot be found.");

@@ -1,6 +1,7 @@
 ﻿@page "/course-edit"
 @page "/course-edit/{id:int}"
 @inject ICourseService CourseService
+@inject IAttendeeService AttendeeService
 @inject NavigationManager NavigationManager
 
 @if (Id == null)
@@ -34,9 +35,49 @@ else
         </div>
     </div>
     <br />
-    <button type="submit" class="btn btn-primary">@btnText</button>
-
+    <button type="submit" class="btn btn-primary mb-5">@btnText</button>
 </EditForm>
+
+@if(Id != null) {
+    <hr />
+    <h3>Course attendees</h3>
+
+    @if (course.CourseAttendees.Count > 0)
+    {
+        <table class="table mt-5">
+            <thead>
+                <tr>
+                    <th>First name</th>
+                    <th>Last name</th>
+                    <th>Email</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var attendee in course.CourseAttendees)
+                {
+                    <tr>
+                        <td>@attendee.FirstName</td>
+                        <td>@attendee.LastName</td>
+                        <td>@attendee.Email</td>
+                        <td>
+                            <button class="btn btn-primary" @onclick="(() => EditAttendee(attendee.Id))">
+                                <i class="oi oi-pencil"></i>
+                            </button>
+                            <button class="btn btn-danger" @onclick="(() => DeleteAttendee(attendee.Id))">
+                                <i class="oi oi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <span>There are no course attendees to display.</span>
+    }
+}
 
 @code {
     [Parameter]
@@ -71,5 +112,16 @@ else
             await CourseService.UpdateCourse((int)Id, course);
         }
         NavigationManager.NavigateTo("/");
+    }
+
+    private void EditAttendee(int Id)
+    {
+        NavigationManager.NavigateTo($"/attendee-edit/{Id}");
+    }
+
+    private async void DeleteAttendee(int Id)
+    {
+        await AttendeeService.DeleteAttendee(Id);
+        NavigationManager.NavigateTo($"/course-edit/{course.Id}", true);
     }
 }
