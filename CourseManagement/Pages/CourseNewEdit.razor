@@ -26,6 +26,14 @@ else
         <label for="Description">Course description</label>
         <InputTextArea id="Description" @bind-Value="course.CourseDescription" class="form-control"></InputTextArea>
     </div>
+    <div class="mb-3">
+        <label for="Teacher">Course teacher</label>
+        <InputText id="Teacher" @bind-Value="course.CourseTeacher" class="form-control"></InputText>
+    </div>
+    <div class="mb-3">
+        <label for="TeacherEmail">Course teacher email</label>
+        <InputText id="TeacherEmail" @bind-Value="course.CourseTeacherEmail" class="form-control"></InputText>
+    </div>
     <div class="row mb-3">
         <label for="Date">Course date</label>
         <div class="col-4">
@@ -34,6 +42,14 @@ else
         <div class="col-2">
             <InputDate id="Date" @bind-Value="course.CourseStartDateTime" class="form-control" Type="InputDateType.Time"></InputDate>
         </div>
+    </div>
+    <div class="mb-3">
+        <label for="CourseCapacity">Course capacity</label>
+        <InputNumber id="CourseCapacity" @bind-Value="course.MaxNumberOfAtendees" class="form-control"></InputNumber>
+    </div>
+    <div class="mb-3">
+        <label for="PIN">Course edit/delete PIN</label>
+        <InputText id="PIN" @bind-Value="course.EditDeleteCoursePIN" class="form-control"></InputText>
     </div>
     <br />
     <button type="submit" class="btn btn-primary mb-5">@btnText</button>
@@ -86,7 +102,7 @@ else
 
     string btnText = string.Empty;
 
-    Course course = new Course();
+    CourseNewEditModel course = new CourseNewEditModel();
 
     Attendee attendee = new Attendee();
 
@@ -94,7 +110,7 @@ else
     {
         if (Id != null)
         {
-            course = await CourseService.GetCourseById((int)Id);
+            course = await CourseService.GetCourseByIdForCreateEdit((int)Id);
             btnText = "Save changes";
         }
         else

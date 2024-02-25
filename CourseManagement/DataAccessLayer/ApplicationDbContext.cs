@@ -1,4 +1,4 @@
-﻿using CourseManagement.Models;
+﻿using CourseManagement.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace CourseManagement.DataAccessLayer

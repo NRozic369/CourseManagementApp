@@ -25,7 +25,9 @@ else if (courses.Count > 0)
         <thead>
             <tr>
                 <th>Course title</th>
+                <th>Course teacher</th>
                 <th>Course date</th>
+                <th>Course capacity</th>
                 <th></th>
                 <th></th>
             </tr>
@@ -35,7 +37,9 @@ else if (courses.Count > 0)
             {
                 <tr>
                     <td>@course.CourseTitle</td>
+                    <td>@course.CourseTeacher</td>
                     <td>@course.CourseStartDateTime.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@course.CourseCapacity</td>
                     <td>
                         <button class="btn btn-info" @onclick="(() => ShowCourseDetails(course.Id))">
                             <i class="oi oi-magnifying-glass"></i>
@@ -64,7 +68,7 @@ else
 
 @code
 {
-    List<Course>? courses = null;
+    List<CoursesListModel>? courses = null;
 
     protected override async Task OnInitializedAsync()
     {

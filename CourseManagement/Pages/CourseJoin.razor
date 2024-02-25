@@ -32,13 +32,13 @@
     [Parameter]
     public int CourseId { get; set; }
 
-    Attendee attendee = new Attendee();
+    AttendeeModel attendee = new AttendeeModel();
 
-    Course course = new Course();
+    CourseDetailsModel course = new CourseDetailsModel();
 
     protected override async Task OnParametersSetAsync()
     {
-        course = await CourseService.GetCourseById(CourseId);
+        course = await CourseService.GetCourseDetailsById(CourseId);
         attendee.CourseId = CourseId;
     }
 

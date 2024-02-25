@@ -1,4 +1,5 @@
 ﻿using CourseManagement.DataAccessLayer;
+using CourseManagement.Entities;
 using CourseManagement.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,9 +19,17 @@ namespace CourseManagement.Services
             return courseAttendees.Any(x => x.FirstName == firstName && x.LastName == lastName && x.Email == email);
         }
 
-        public async Task CreateAttendee(Attendee attendee)
+        public async Task CreateAttendee(AttendeeModel attendee)
         {
-            _context.Attendees.Add(attendee);
+            Attendee attendeeToCreate = new Attendee
+            {
+                FirstName = attendee.FirstName,
+                LastName = attendee.LastName,
+                Email = attendee.Email,
+                CourseId = attendee.CourseId,
+            };
+
+            _context.Attendees.Add(attendeeToCreate);
             await _context.SaveChangesAsync();
         }
 
@@ -35,19 +44,39 @@ namespace CourseManagement.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<Attendee> GetAttendeeById(int id)
+        public async Task<AttendeeModel> GetAttendeeById(int id)
         {
             var attendee = await _context.Attendees.FindAsync(id);
-            return attendee;
+            if (attendee == null)
+            {
+                throw new Exception("Selected attendee cannot be found.");
+            }
+
+            return new AttendeeModel
+            {
+                Id = attendee.Id,
+                FirstName = attendee.FirstName,
+                LastName = attendee.LastName,
+                Email = attendee.Email,
+                CourseId = attendee.CourseId
+            };
         }
 
-        public async Task<List<Attendee>> GetAttendeesByCourseId(int id)
+        public async Task<List<AttendeeModel>> GetAttendeesByCourseId(int id)
         {
-            var attendees = await _context.Attendees.Where(x => x.CourseId == id).ToListAsync();
+            var attendees = await _context.Attendees.Where(x => x.CourseId == id).Select(x => new AttendeeModel
+            {
+                Id = x.Id,
+                FirstName = x.FirstName,
+                LastName = x.LastName,
+                Email = x.Email,
+                CourseId = x.CourseId
+            }).ToListAsync();
+
             return attendees;
         }
 
-        public async Task UpdateAttendee(int id, Attendee attendee)
+        public async Task UpdateAttendee(int id, AttendeeModel attendee)
         {
             var attendeeToUpdate = await _context.Attendees.FindAsync(id);
             if (attendeeToUpdate == null)
