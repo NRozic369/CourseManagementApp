@@ -1,6 +1,7 @@
 ﻿@page "/"
 @inject ICourseService CourseService
 @inject NavigationManager NavigationManager
+@inject IToastService ToastService
 
 <PageTitle>Index</PageTitle>
 
@@ -88,7 +89,8 @@ else
     private async Task DeleteCourse(int id)
     {
         await CourseService.DeleteCourse(id);
-        NavigationManager.NavigateTo("/", true);
+        ToastService.ShowSuccess("Course was succesfully deleted!");
+        courses = await CourseService.GetAllCourses();
     }
 
     private void JoinCourse(int id)

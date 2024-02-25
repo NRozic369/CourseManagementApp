@@ -124,10 +124,10 @@ else
         NavigationManager.NavigateTo($"/attendee-edit/{Id}");
     }
 
-    private async void DeleteAttendee(int Id)
+    private async void DeleteAttendee(int AttendeeId)
     {
-        await AttendeeService.DeleteAttendee(Id);
+        await AttendeeService.DeleteAttendee(AttendeeId);
         ToastService.ShowSuccess("Attendee was succesfully deleted!");
-        NavigationManager.NavigateTo($"/course-edit/{course.Id}", true);
+        StateHasChanged();
     }
 }

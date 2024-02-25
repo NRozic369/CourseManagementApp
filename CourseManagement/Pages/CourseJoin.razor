@@ -50,5 +50,9 @@
             ToastService.ShowSuccess("Attendee was succesfully created!");
             NavigationManager.NavigateTo("/");
         }
+        else
+        {
+            ToastService.ShowError("Attendee already exists!");
+        }
     }
 }
