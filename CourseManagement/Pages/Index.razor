@@ -52,7 +52,7 @@ else if (courses.Count > 0)
                         </button>
                     </td>
                     <td>
-                        <button class="btn btn-success" @onclick="(() => JoinCourse(course.Id))">
+                        <button class="btn btn-success" disabled="@course.IsCapacityFull" @onclick="(() => JoinCourse(course.Id))">
                             <i class="oi oi-person"></i>
                         </button>
                     </td>

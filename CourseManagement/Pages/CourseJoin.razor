@@ -44,15 +44,23 @@
 
     private async Task HandleSubmit()
     {
-        if(await AttendeeService.CheckIfAttendeeExists(CourseId, attendee.FirstName, attendee.LastName, attendee.Email) == false)
+        if (await CourseService.CheckIfCourseCapacityFull(CourseId))
         {
-            await AttendeeService.CreateAttendee(attendee);
-            ToastService.ShowSuccess("Attendee was succesfully created!");
-            NavigationManager.NavigateTo("/");
+            if (await AttendeeService.CheckIfAttendeeExists(CourseId, attendee.FirstName, attendee.LastName, attendee.Email) == false)
+            {
+                await AttendeeService.CreateAttendee(attendee);
+                ToastService.ShowSuccess("Attendee was succesfully created!");
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                ToastService.ShowError("Attendee already exists!");
+            }
         }
         else
         {
-            ToastService.ShowError("Attendee already exists!");
+            ToastService.ShowError("Course already full!");
+            NavigationManager.NavigateTo("/");
         }
     }
 }

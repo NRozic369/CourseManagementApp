@@ -7,5 +7,6 @@
         public DateTime CourseStartDateTime { get; set; }
         public string CourseCapacity { get; set; } = null!;
         public string CourseTeacher { get; set; } = null!;
+        public bool IsCapacityFull { get; set; }
     }
 }

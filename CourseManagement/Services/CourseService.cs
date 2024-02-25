@@ -14,6 +14,13 @@ namespace CourseManagement.Services
             _context = context;
         }
 
+        public async Task<bool> CheckIfCourseCapacityFull(int id)
+        {
+            var course = await _context.Courses.FindAsync(id);
+            var courseAttendeesCount = await _context.Attendees.Where(x => x.CourseId == id).CountAsync();
+            return courseAttendeesCount + 1 <= course.MaxNumberOfAtendees;
+        }
+
         public async Task CreateCourse(CourseNewEditModel course)
         {
             Course courseToCreate = new Course
@@ -52,7 +59,8 @@ namespace CourseManagement.Services
                 CourseTitle = x.CourseTitle,
                 CourseStartDateTime = x.CourseStartDateTime,
                 CourseTeacher = x.CourseTeacher,
-                CourseCapacity = $"{x.CourseAttendees.Count}/{x.MaxNumberOfAtendees}"
+                CourseCapacity = $"{x.CourseAttendees.Count}/{x.MaxNumberOfAtendees}",
+                IsCapacityFull = x.CourseAttendees.Count == x.MaxNumberOfAtendees
             }).ToListAsync();
         }
 
@@ -114,5 +122,7 @@ namespace CourseManagement.Services
 
             await _context.SaveChangesAsync();
         }
+
+
     }
 }
