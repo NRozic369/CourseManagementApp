@@ -1,13 +1,16 @@
 ﻿using CourseManagement.DataAccessLayer;
 using CourseManagement.Entities;
 using CourseManagement.Models;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
 
 namespace CourseManagement.Services
 {
     public class CourseService : ICourseService
     {
         private readonly ApplicationDbContext _context;
+        private readonly byte[] salt = Encoding.ASCII.GetBytes("opakjogpkjdopajgkoirkjatki");
 
         public CourseService(ApplicationDbContext context)
         {
@@ -17,7 +20,14 @@ namespace CourseManagement.Services
         public async Task<bool> CheckCoursePIN(int id, string pin)
         {
             var course = await _context.Courses.FirstOrDefaultAsync(x => x.Id == id);
-            return pin == course.EditDeleteCoursePIN;
+            var hashedPin = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                    password: pin,
+                    salt: salt,
+                    prf: KeyDerivationPrf.HMACSHA256,
+                    iterationCount: 100000,
+                    numBytesRequested: 256 / 8));
+
+            return hashedPin == course.EditDeleteCoursePIN;
         }
 
         public async Task<bool> CheckIfCourseCapacityFull(int id)
@@ -38,7 +48,12 @@ namespace CourseManagement.Services
                 CourseStartDateTime = course.CourseStartDateTime,
                 MaxNumberOfAtendees = course.MaxNumberOfAtendees,
 
-                EditDeleteCoursePIN = course.EditDeleteCoursePIN,
+                EditDeleteCoursePIN = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                    password: course.EditDeleteCoursePIN,
+                    salt: salt,
+                    prf: KeyDerivationPrf.HMACSHA256,
+                    iterationCount: 100000,
+                    numBytesRequested: 256 / 8)),
             };
 
             _context.Courses.Add(courseToCreate);
@@ -124,11 +139,15 @@ namespace CourseManagement.Services
             courseFromDb.CourseStartDateTime = course.CourseStartDateTime;
             courseFromDb.MaxNumberOfAtendees = course.MaxNumberOfAtendees;
 
-            courseFromDb.EditDeleteCoursePIN = course.EditDeleteCoursePIN;
+            if (await CheckCoursePIN(id, course.EditDeleteCoursePIN))
+            {
+                await _context.SaveChangesAsync();
 
-            await _context.SaveChangesAsync();
+            }
+            else
+            {
+                throw new Exception("Incorrect PIN, changes not saved!");
+            }
         }
-
-
     }
 }

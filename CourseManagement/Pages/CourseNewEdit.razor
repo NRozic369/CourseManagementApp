@@ -48,7 +48,14 @@ else
         <InputNumber id="CourseCapacity" @bind-Value="course.MaxNumberOfAtendees" class="form-control"></InputNumber>
     </div>
     <div class="mb-3">
-        <label for="PIN">Course edit/delete PIN</label>
+        @if (Id == null)
+        {
+            <label for="PIN">Course edit/delete PIN</label>
+        }
+        else
+        {
+            <label for="PIN">Confirm course edit/delete PIN</label>
+        }
         <InputText id="PIN" type="password" @bind-Value="course.EditDeleteCoursePIN" class="form-control"></InputText>
     </div>
     <br />
