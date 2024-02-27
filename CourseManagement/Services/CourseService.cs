@@ -14,6 +14,12 @@ namespace CourseManagement.Services
             _context = context;
         }
 
+        public async Task<bool> CheckCoursePIN(int id, string pin)
+        {
+            var course = await _context.Courses.FirstOrDefaultAsync(x => x.Id == id);
+            return pin == course.EditDeleteCoursePIN;
+        }
+
         public async Task<bool> CheckIfCourseCapacityFull(int id)
         {
             var course = await _context.Courses.FindAsync(id);

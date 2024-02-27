@@ -47,7 +47,7 @@ else if (courses.Count > 0)
                         <button class="btn btn-primary" @onclick="(() => EditCourse(course.Id))">
                             <i class="oi oi-pencil"></i>
                         </button>
-                        <button class="btn btn-danger" @onclick="(() => DeleteCourse(course.Id))">
+                        <button class="btn btn-danger" @onclick="(() => DeleteCourseDialog(course.Id))">
                             <i class="oi oi-trash"></i>
                         </button>
                     </td>
@@ -66,9 +66,43 @@ else
     <span>There are no courses to display.</span>
 }
 
+<PINConfirmationDialog @ref="child" OnClose="@PINConfirmationDialogClose"></PINConfirmationDialog>
+
 @code
 {
+    PINConfirmationDialog child;
+
     List<CoursesListModel>? courses = null;
+
+    private async void PINConfirmationDialogClose(PINConfirmationModel result)
+    {
+        if (result.IsDialogOk)
+        {
+            if(result.InsertedPIN == null)
+            {
+                ToastService.ShowError("PIN was not inserted!");
+            }
+            else
+            {
+                if (await CourseService.CheckCoursePIN(result.Id, result.InsertedPIN))
+                {
+                    if(result.AfterDialogActionType == "edit")
+                    {
+                        NavigationManager.NavigateTo($"course-edit/{result.Id}");
+                    }
+                    else
+                    {
+                        await DeleteCourse(result.Id);
+                        StateHasChanged();
+                    }
+                }
+                else
+                {
+                    ToastService.ShowError("Incorrect PIN!");
+                }
+            }
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -82,12 +116,17 @@ else
 
     private void EditCourse(int id)
     {
-        NavigationManager.NavigateTo($"course-edit/{id}");
+        child.ShowPINConfirmationDialog("PIN required!", "PIN is required for ", id, "edit");
     }
 
     private void CreateCourse()
     {
         NavigationManager.NavigateTo("course-edit");
+    }
+
+    private void DeleteCourseDialog(int id)
+    {
+        child.ShowPINConfirmationDialog("PIN required!", "PIN is required for ", id, "delete");
     }
 
     private async Task DeleteCourse(int id)

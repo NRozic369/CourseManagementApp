@@ -11,5 +11,6 @@ namespace CourseManagement.Services
         public Task UpdateCourse(int id, CourseNewEditModel course);
         public Task DeleteCourse(int id);
         public Task<bool> CheckIfCourseCapacityFull(int id);
+        public Task<bool> CheckCoursePIN(int id, string pin);
     }
 }
