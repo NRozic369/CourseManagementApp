@@ -23,6 +23,7 @@ namespace CourseManagement.Models
         [Required]
         [StringLength(150, MinimumLength = 2)]
         [EmailAddress]
+        [RegularExpression(@"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$", ErrorMessage = "Please enter a valid email.")]
         public string CourseTeacherEmail { get; set; } = null!;
         [Required]
         [PasswordPropertyText]
