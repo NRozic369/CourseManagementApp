@@ -34,13 +34,28 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        attendee = await AttendeeService.GetAttendeeById(Id);
+        var response = await AttendeeService.GetAttendeeById(Id);
+        if (response.IsSuccessful)
+        {
+            attendee = response.Data;
+        }
+        else
+        {
+            ToastService.ShowError(response.Message);
+        }
     }
 
     private async void HandleSubmit()
     {
-        await AttendeeService.UpdateAttendee(Id, attendee);
-        ToastService.ShowSuccess("Attendee was succesfully updated!");
-        NavigationManager.NavigateTo($"/course-edit/{attendee.CourseId}");
+        var response = await AttendeeService.UpdateAttendee(Id, attendee);
+        if (response.IsSuccessful)
+        {
+            ToastService.ShowSuccess(response.Message);
+            NavigationManager.NavigateTo($"/course-edit/{attendee.CourseId}");
+        }
+        else
+        {
+            ToastService.ShowError(response.Message);
+        }
     }
 }

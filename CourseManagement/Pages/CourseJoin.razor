@@ -38,7 +38,17 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        course = await CourseService.GetCourseDetailsById(CourseId);
+        var response = await CourseService.GetCourseDetailsById(CourseId);
+        if (response.IsSuccessful)
+        {
+            ToastService.ShowSuccess(response.Message);
+            course = response.Data;
+        }
+        else
+        {
+            ToastService.ShowError(response.Message);
+        }
+
         attendee.CourseId = CourseId;
     }
 
@@ -48,18 +58,25 @@
         {
             if (await AttendeeService.CheckIfAttendeeExists(CourseId, attendee.FirstName, attendee.LastName, attendee.Email) == false)
             {
-                await AttendeeService.CreateAttendee(attendee);
-                ToastService.ShowSuccess("Attendee was succesfully created!");
-                NavigationManager.NavigateTo("/");
+                var response = await AttendeeService.CreateAttendee(attendee);
+                if (response.IsSuccessful)
+                {
+                    ToastService.ShowSuccess(response.Message);
+                    NavigationManager.NavigateTo("/");
+                }
+                else
+                {
+                    ToastService.ShowError(response.Message);
+                }
             }
             else
             {
-                ToastService.ShowError("Attendee already exists!");
+                ToastService.ShowError("Attendee already exists");
             }
         }
         else
         {
-            ToastService.ShowError("Course already full!");
+            ToastService.ShowError("Course already full");
             NavigationManager.NavigateTo("/");
         }
     }

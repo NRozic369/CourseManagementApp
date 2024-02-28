@@ -1,5 +1,6 @@
 ﻿@page "/course-details/{id:int}"
 @inject ICourseService CourseService
+@inject IToastService ToastService
 
 <h1>Course details</h1>
 <hr />
@@ -35,10 +36,19 @@
     [Parameter]
     public int Id { get; set; }
 
+
     CourseDetailsModel course = new CourseDetailsModel();
 
     protected override async Task OnParametersSetAsync()
     {
-        course = await CourseService.GetCourseDetailsById(Id);
+        var response = await CourseService.GetCourseDetailsById(Id);
+        if (response.IsSuccessful)
+        {
+            course = response.Data;
+        }
+        else
+        {
+            ToastService.ShowError(response.Message);
+        }
     }
 }

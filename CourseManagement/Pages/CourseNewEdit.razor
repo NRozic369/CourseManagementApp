@@ -117,8 +117,18 @@ else
     {
         if (Id != null)
         {
-            course = await CourseService.GetCourseByIdForCreateEdit((int)Id);
-            btnText = "Save changes";
+            var response = await CourseService.GetCourseByIdForCreateEdit((int)Id);
+            if (response.IsSuccessful)
+            {
+                course = response.Data;
+                btnText = "Save changes";
+            }
+            else
+            {
+                ToastService.ShowError(response.Message);
+                course.CourseStartDateTime = DateTime.Now;
+                btnText = "Save";
+            }
         }
         else
         {
@@ -131,13 +141,27 @@ else
     {
         if (Id == null)
         {
-            await CourseService.CreateCourse(course);
-            ToastService.ShowSuccess("Course was succesfully created!");
+            var response = await CourseService.CreateCourse(course);
+            if (response.IsSuccessful)
+            {
+                ToastService.ShowSuccess(response.Message);
+            }
+            else
+            {
+                ToastService.ShowError(response.Message);
+            }
         }
         else
         {
-            await CourseService.UpdateCourse((int)Id, course);
-            ToastService.ShowSuccess("Course was succesfully updated!");
+            var response = await CourseService.UpdateCourse((int)Id, course);
+            if (response.IsSuccessful)
+            {
+                ToastService.ShowSuccess(response.Message);
+            }
+            else
+            {
+                ToastService.ShowError(response.Message);
+            }
         }
         NavigationManager.NavigateTo("/");
     }
@@ -147,10 +171,25 @@ else
         NavigationManager.NavigateTo($"/attendee-edit/{Id}");
     }
 
-    private async void DeleteAttendee(int AttendeeId)
+    private async Task DeleteAttendee(int AttendeeId)
     {
-        await AttendeeService.DeleteAttendee(AttendeeId);
-        ToastService.ShowSuccess("Attendee was succesfully deleted!");
-        StateHasChanged();
+        var response = await AttendeeService.DeleteAttendee(AttendeeId);
+        if (response.IsSuccessful)
+        {
+            ToastService.ShowSuccess(response.Message);
+            var responseCourse = await CourseService.GetCourseByIdForCreateEdit((int)Id);
+            if (responseCourse.IsSuccessful)
+            {
+                course = responseCourse.Data;
+            }
+            else
+            {
+                ToastService.ShowError(responseCourse.Message);
+            }
+        }
+        else
+        {
+            ToastService.ShowError(response.Message);
+        }
     }
 }

@@ -106,7 +106,15 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        courses = await CourseService.GetAllCourses();
+        var response = await CourseService.GetAllCourses();
+        if (response.IsSuccessful)
+        {
+            courses = response.Data;
+        }
+        else
+        {
+            ToastService.ShowError(response.Message);
+        }
     }
 
     private void ShowCourseDetails(int id)
@@ -131,9 +139,24 @@ else
 
     private async Task DeleteCourse(int id)
     {
-        await CourseService.DeleteCourse(id);
-        ToastService.ShowSuccess("Course was succesfully deleted!");
-        courses = await CourseService.GetAllCourses();
+        var response = await CourseService.DeleteCourse(id);
+        if (response.IsSuccessful)
+        {
+            ToastService.ShowSuccess(response.Message);
+            var coursesResponse = await CourseService.GetAllCourses();
+            if (coursesResponse.IsSuccessful)
+            {
+                courses = coursesResponse.Data;
+            }
+            else
+            {
+                ToastService.ShowError(coursesResponse.Message);
+            }
+        }
+        else
+        {
+            ToastService.ShowError(response.Message);
+        }
     }
 
     private void JoinCourse(int id)

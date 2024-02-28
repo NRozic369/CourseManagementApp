@@ -1,5 +1,6 @@
 ﻿using CourseManagement.DataAccessLayer;
 using CourseManagement.Entities;
+using CourseManagement.Infrastructure;
 using CourseManagement.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,7 +20,7 @@ namespace CourseManagement.Services
             return courseAttendees.Any(x => x.FirstName == firstName && x.LastName == lastName && x.Email == email);
         }
 
-        public async Task CreateAttendee(AttendeeModel attendee)
+        public async Task<ProcessResponse> CreateAttendee(AttendeeModel attendee)
         {
             Attendee attendeeToCreate = new Attendee
             {
@@ -29,30 +30,74 @@ namespace CourseManagement.Services
                 CourseId = attendee.CourseId,
             };
 
-            _context.Attendees.Add(attendeeToCreate);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Attendees.Add(attendeeToCreate);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return new ProcessResponse
+                {
+                    IsSuccessful = false,
+                    Message = "Creating attendee failed"
+                };
+            }
+
+            return new ProcessResponse
+            {
+                IsSuccessful = true,
+                Message = "Attendee created"
+            };
         }
 
-        public async Task DeleteAttendee(int id)
+        public async Task<ProcessResponse> DeleteAttendee(int id)
         {
             var attendeeToDelete = await _context.Attendees.FindAsync(id);
             if (attendeeToDelete == null)
             {
-                throw new Exception("Selected attendee cannot be found.");
+                return new ProcessResponse
+                {
+                    IsSuccessful = false,
+                    Message = "Selected attendee cannot be found"
+                };
             }
-            _context.Attendees.Remove(attendeeToDelete);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Attendees.Remove(attendeeToDelete);
+                await _context.SaveChangesAsync();
+            }
+            catch
+            {
+                return new ProcessResponse
+                {
+                    IsSuccessful = false,
+                    Message = "Deleting attendee failed"
+                };
+            }
+
+            return new ProcessResponse
+            {
+                IsSuccessful = true,
+                Message = "Attendee successfully deleted"
+            };
+
         }
 
-        public async Task<AttendeeModel> GetAttendeeById(int id)
+        public async Task<ProcessResponse<AttendeeModel>> GetAttendeeById(int id)
         {
             var attendee = await _context.Attendees.FindAsync(id);
             if (attendee == null)
             {
-                throw new Exception("Selected attendee cannot be found.");
+                return new ProcessResponse<AttendeeModel>
+                {
+                    IsSuccessful = false,
+                    Message = "Selected attendee cannot be found",
+                    Data = null
+                };
             }
 
-            return new AttendeeModel
+            var result = new AttendeeModel
             {
                 Id = attendee.Id,
                 FirstName = attendee.FirstName,
@@ -60,9 +105,16 @@ namespace CourseManagement.Services
                 Email = attendee.Email,
                 CourseId = attendee.CourseId
             };
+
+            return new ProcessResponse<AttendeeModel>
+            {
+                IsSuccessful = true,
+                Message = "Selected attendee displayed",
+                Data = result
+            };
         }
 
-        public async Task<List<AttendeeModel>> GetAttendeesByCourseId(int id)
+        public async Task<ProcessResponse<List<AttendeeModel>>> GetAttendeesByCourseId(int id)
         {
             var attendees = await _context.Attendees.Where(x => x.CourseId == id).Select(x => new AttendeeModel
             {
@@ -73,22 +125,48 @@ namespace CourseManagement.Services
                 CourseId = x.CourseId
             }).ToListAsync();
 
-            return attendees;
+            return new ProcessResponse<List<AttendeeModel>>
+            {
+                IsSuccessful = true,
+                Message = "Attendees for selected course displayed",
+                Data = attendees
+            };
         }
 
-        public async Task UpdateAttendee(int id, AttendeeModel attendee)
+        public async Task<ProcessResponse> UpdateAttendee(int id, AttendeeModel attendee)
         {
             var attendeeToUpdate = await _context.Attendees.FindAsync(id);
             if (attendeeToUpdate == null)
             {
-                throw new Exception("Selected attendee not found.");
+                return new ProcessResponse
+                {
+                    IsSuccessful = false,
+                    Message = "Selected attendee cannot be found"
+                };
             }
 
-            attendeeToUpdate.FirstName = attendee.FirstName;
-            attendeeToUpdate.LastName = attendee.LastName;
-            attendeeToUpdate.Email = attendee.Email;
+            try
+            {
+                attendeeToUpdate.FirstName = attendee.FirstName;
+                attendeeToUpdate.LastName = attendee.LastName;
+                attendeeToUpdate.Email = attendee.Email;
 
-            await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return new ProcessResponse
+                {
+                    IsSuccessful = false,
+                    Message = "Selected attendee update failed"
+                };
+            }
+
+            return new ProcessResponse
+            {
+                IsSuccessful = true,
+                Message = "Attendee succesfully updated"
+            };
         }
     }
 }
