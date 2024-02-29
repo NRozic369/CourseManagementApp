@@ -62,6 +62,7 @@ else
     <button type="submit" class="btn btn-primary mb-5">@btnText</button>
 </EditForm>
 
+
 @if(Id != null) {
     <hr />
     <h3>Course attendees</h3>
@@ -88,7 +89,7 @@ else
                             <button class="btn btn-primary" @onclick="(() => EditAttendee(attendee.Id))">
                                 <i class="oi oi-pencil"></i>
                             </button>
-                            <button class="btn btn-danger" @onclick="(() => DeleteAttendee(attendee.Id))">
+                            <button class="btn btn-danger" @onclick="(() => DeleteAttendeeDialog(attendee.Id))">
                                 <i class="oi oi-trash"></i>
                             </button>
                         </td>
@@ -103,7 +104,11 @@ else
     }
 }
 
+<PINConfirmationDialog @ref="child" OnClose="@PINConfirmationDialogClose"></PINConfirmationDialog>
+
 @code {
+    PINConfirmationDialog child;
+
     [Parameter]
     public int? Id { get; set; }
 
@@ -111,7 +116,35 @@ else
 
     CourseNewEditModel course = new CourseNewEditModel();
 
-    Attendee attendee = new Attendee();
+    private async void PINConfirmationDialogClose(PINConfirmationModel result)
+    {
+        if (result.IsDialogOk)
+        {
+            if (result.InsertedPIN == null)
+            {
+                ToastService.ShowError("PIN was not inserted!");
+            }
+            else
+            {
+                if (await CourseService.CheckCoursePIN(result.CourseId, result.InsertedPIN))
+                {
+                    if (result.AfterDialogActionType == "edit")
+                    {
+                        NavigationManager.NavigateTo($"/attendee-edit/{result.OtherId.Value}");
+                    }
+                    else
+                    {
+                        await DeleteAttendee(result.OtherId.Value);
+                        StateHasChanged();
+                    }
+                }
+                else
+                {
+                    ToastService.ShowError("Incorrect PIN!");
+                }
+            }
+        }
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -168,7 +201,12 @@ else
 
     private void EditAttendee(int Id)
     {
-        NavigationManager.NavigateTo($"/attendee-edit/{Id}");
+        child.ShowPINConfirmationDialog("PIN required!", "PIN is required for ", course.Id, "edit", Id);
+    }
+
+    private async Task DeleteAttendeeDialog(int AttendeeId)
+    {
+        child.ShowPINConfirmationDialog("PIN required!", "PIN is required for ", course.Id, "delete", AttendeeId);
     }
 
     private async Task DeleteAttendee(int AttendeeId)

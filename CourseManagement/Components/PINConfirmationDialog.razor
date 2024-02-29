@@ -23,7 +23,8 @@
 
 @code
 {
-    public int Id { get; set; }
+    public int CourseId { get; set; }
+    public int? OtherId { get; set; }
     public string Title { get; set; } = null!;
     public string Text { get; set; } = null!;
     public string AfterDialogActionType { get; set; } = null!;
@@ -34,13 +35,14 @@
 
     private bool ShowDialog { get; set; } = false;
 
-    public void ShowPINConfirmationDialog(string title, string text, int id, string afterDialogType)
+    public void ShowPINConfirmationDialog(string title, string text, int courseId, string afterDialogType, int? otherId)
     {
         ShowDialog = true;
         Title = title;
         Text = text;
-        Id = id;
+        CourseId = courseId;
         AfterDialogActionType = afterDialogType;
+        OtherId = otherId;
     }
 
     private Task ModalCancel()
@@ -50,7 +52,8 @@
         {
                 IsDialogOk = false,
                 InsertedPIN = null,
-                Id = Id,
+                CourseId = CourseId,
+                OtherId = null,
                 AfterDialogActionType = AfterDialogActionType
         });
     }
@@ -64,7 +67,8 @@
             {
                 IsDialogOk = true,
                 InsertedPIN = null,
-                Id = Id,
+                CourseId = CourseId,
+                OtherId = null,
                 AfterDialogActionType = AfterDialogActionType
             });
         }
@@ -76,7 +80,8 @@
             {
                 IsDialogOk = true,
                 InsertedPIN = pin,
-                Id = Id,
+                CourseId = CourseId,
+                OtherId = OtherId,
                 AfterDialogActionType = AfterDialogActionType
             });
         }

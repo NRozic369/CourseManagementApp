@@ -84,15 +84,15 @@ else
             }
             else
             {
-                if (await CourseService.CheckCoursePIN(result.Id, result.InsertedPIN))
+                if (await CourseService.CheckCoursePIN(result.CourseId, result.InsertedPIN))
                 {
                     if(result.AfterDialogActionType == "edit")
                     {
-                        NavigationManager.NavigateTo($"course-edit/{result.Id}");
+                        NavigationManager.NavigateTo($"course-edit/{result.CourseId}");
                     }
                     else
                     {
-                        await DeleteCourse(result.Id);
+                        await DeleteCourse(result.CourseId);
                         StateHasChanged();
                     }
                 }
@@ -124,7 +124,7 @@ else
 
     private void EditCourse(int id)
     {
-        child.ShowPINConfirmationDialog("PIN required!", "PIN is required for ", id, "edit");
+        child.ShowPINConfirmationDialog("PIN required!", "PIN is required for ", id, "edit", null);
     }
 
     private void CreateCourse()
@@ -134,7 +134,7 @@ else
 
     private void DeleteCourseDialog(int id)
     {
-        child.ShowPINConfirmationDialog("PIN required!", "PIN is required for ", id, "delete");
+        child.ShowPINConfirmationDialog("PIN required!", "PIN is required for ", id, "delete", null);
     }
 
     private async Task DeleteCourse(int id)
