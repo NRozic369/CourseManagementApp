@@ -59,17 +59,64 @@ else if (courses.Count > 0)
                 </tr>
             }
         </tbody>
+        <div>
+            <input type="button" class="btn-lg btn" id="prev" @onclick="PreviousPage" value="Previous" />
+
+            @for(int i = CurPage - 2; i <= CurPage + 2; i++)
+            {
+                int j = i;
+                if(i > 0)
+                {
+                    if (i == CurPage)
+                    {
+                        <span class="px-2" style="font-weight:bold;cursor:pointer" @onclick="() => ShowPage(j)">@i</span>
+                    }
+                    else
+                    {
+                        <span class="px-2" style="cursor:pointer" @onclick="() => ShowPage(j)">@i</span>
+                    }
+                }
+            }
+
+            <input type="button" class="btn-lg btn" id="next" @onclick="NextPage" value="Next" />
+        </div>
     </table>
 }
 else
 {
     <span>There are no courses to display.</span>
+    <div>
+        <input type="button" class="btn-lg btn" id="prev" @onclick="PreviousPage" value="Previous" />
+
+        @for (int i = CurPage - 2; i <= CurPage + 2; i++)
+        {
+            int j = i;
+            if (i > 0)
+            {
+                if (i == CurPage)
+                {
+                    <span class="px-2" style="font-weight:bold;cursor:pointer" @onclick="() => ShowPage(j)">@i</span>
+                }
+                else
+                {
+                    <span class="px-2" style="cursor:pointer" @onclick="() => ShowPage(j)">@i</span>
+                }
+            }
+        }
+
+        <input type="button" class="btn-lg btn" id="next" @onclick="NextPage" value="Next" />
+    </div>
 }
 
 <PINConfirmationDialog @ref="child" OnClose="@PINConfirmationDialogClose"></PINConfirmationDialog>
 
 @code
 {
+
+    const int PAGESIZE = 5;
+
+    private int CurPage = 1;
+
     PINConfirmationDialog child;
 
     List<CoursesListModel>? courses = null;
@@ -106,7 +153,12 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var response = await CourseService.GetAllCourses();
+        await ShowPage();
+    }
+
+    protected async Task ShowPage()
+    {
+        var response = await CourseService.GetAllCourses(CurPage);
         if (response.IsSuccessful)
         {
             courses = response.Data;
@@ -114,6 +166,27 @@ else
         else
         {
             ToastService.ShowError(response.Message);
+        }
+    }
+
+    protected async Task ShowPage(int i)
+    {
+        CurPage = i;
+        await ShowPage();
+    }
+
+    protected async Task NextPage()
+    {
+        CurPage++;
+        await ShowPage();
+    }
+
+    protected async Task PreviousPage()
+    {
+        if(CurPage > 1)
+        {
+            CurPage--;
+            await ShowPage();
         }
     }
 
@@ -143,7 +216,7 @@ else
         if (response.IsSuccessful)
         {
             ToastService.ShowSuccess(response.Message);
-            var coursesResponse = await CourseService.GetAllCourses();
+            var coursesResponse = await CourseService.GetAllCourses(CurPage);
             if (coursesResponse.IsSuccessful)
             {
                 courses = coursesResponse.Data;
