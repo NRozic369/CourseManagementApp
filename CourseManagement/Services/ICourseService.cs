@@ -5,7 +5,7 @@ namespace CourseManagement.Services
 {
     public interface ICourseService
     {
-        public Task<ProcessResponse<List<CoursesListModel>>> GetAllCourses();
+        public Task<PageResponse<CoursesListModel>> GetAllCourses(int curPage, int pageSize);
         public Task<ProcessResponse<CourseNewEditModel>> GetCourseByIdForCreateEdit(int id);
         public Task<ProcessResponse<CourseDetailsModel>> GetCourseDetailsById(int id);
         public Task<ProcessResponse> CreateCourse(CourseNewEditModel course);

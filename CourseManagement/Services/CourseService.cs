@@ -110,24 +110,19 @@ namespace CourseManagement.Services
             };
         }
 
-        public async Task<ProcessResponse<List<CoursesListModel>>> GetAllCourses()
+        public async Task<PageResponse<CoursesListModel>> GetAllCourses(int curPage, int pageSize)
         {
-            var result = await _context.Courses.Select(x => new CoursesListModel
+            var courseList = _context.Courses.Select(x => new CoursesListModel
             {
                 Id = x.Id,
                 CourseTitle = x.CourseTitle,
                 CourseStartDateTime = x.CourseStartDateTime,
                 CourseTeacher = x.CourseTeacher,
                 CourseCapacity = $"{x.CourseAttendees.Count}/{x.MaxNumberOfAtendees}",
-                IsCapacityFull = x.CourseAttendees.Count == x.MaxNumberOfAtendees
-            }).ToListAsync();
+                IsCapacityFull = x.CourseAttendees.Count == x.MaxNumberOfAtendees,
+            }).AsQueryable();
 
-            return new ProcessResponse<List<CoursesListModel>>
-            {
-                IsSuccessful = true,
-                Message = "Courses succesfully displayed",
-                Data = result
-            };
+            return await PageResponse<CoursesListModel>.CreateAsync(courseList, curPage, pageSize);
         }
 
         public async Task<ProcessResponse<CourseNewEditModel>> GetCourseByIdForCreateEdit(int id)
