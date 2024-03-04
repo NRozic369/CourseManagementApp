@@ -7,7 +7,7 @@
 
 <div style="display: flex">
     <h1 style="margin: 0">
-        Available courses
+        This month's courses
     </h1>
     <button class="btn btn-primary" @onclick="(() => CreateCourse())" style="margin-left: auto">
         Create new course
@@ -15,13 +15,20 @@
 </div>
 <hr />
 
+<div style="margin:0 auto; width:50%; text-align:center;">
+    <input style="width:60%;" type="text" @bind-value="SearchString"/>
+    <button class="btn btn-primary" @onclick="(() => SearchStringChange())">
+        Search
+    </button>
+</div>
+
 @if (courses == null)
 {
     <span>Loading...</span>
 }
 else if (courses.Count > 0)
 {
-    <table class="table mt-5">
+    <table class="table mt-4">
         <thead>
             <tr>
                 <th>Course title</th>
@@ -59,29 +66,29 @@ else if (courses.Count > 0)
                 </tr>
             }
         </tbody>
-        <div>
-            <input type="button" class="btn-lg btn" id="prev" disabled="@HasPreviousPage" @onclick="PreviousPage" value="Previous" />
+    </table>
+    <div style="margin:0 auto; width:33%; text-align:center;">
+        <input type="button" class="btn-lg btn" id="prev" disabled="@HasPreviousPage" @onclick="PreviousPage" value="Previous" />
 
-            @for(int i = 1; i <= TotalPages; i++)
+        @for (int i = 1; i <= TotalPages; i++)
+        {
+            int j = i;
+
+            if (i > 0)
             {
-                int j = i;
-
-                if(i > 0)
+                if (i == CurPage)
                 {
-                    if (i == CurPage)
-                    {
-                        <span class="px-2" style="font-weight:bold;cursor:pointer" @onclick="() => GetCourseData(j)">@i</span>
-                    }
-                    else
-                    {
-                        <span class="px-2" style="cursor:pointer" @onclick="() => GetCourseData(j)">@i</span>
-                    }
+                    <input type="button" class="btn-lg btn p-2" readonly="true" style="font-weight:bold;cursor:pointer" @onclick="() => GetCourseData(j)" value="@i"></input>
+                }
+                else
+                {
+                    <input type="button" class="btn-lg btn p-2" readonly="true" style="cursor:pointer" @onclick="() => GetCourseData(j)" value="@i"></input>
                 }
             }
+        }
 
-            <input type="button" class="btn-lg btn" disabled="@HasNextPage" id="next" @onclick="NextPage" value="Next" />
-        </div>
-    </table>
+        <input type="button" class="btn-lg btn" disabled="@HasNextPage" id="next" @onclick="NextPage" value="Next" />
+    </div>
 }
 else
 {
@@ -101,6 +108,8 @@ else
     private bool HasPreviousPage = false;
     private bool HasNextPage = false;
     private int TotalPages = 1;
+
+    private string SearchString = string.Empty;
 
     private async void PINConfirmationDialogClose(PINConfirmationModel result)
     {
@@ -139,11 +148,12 @@ else
 
     protected async Task GetCourseData()
     {
-        var response = await CourseService.GetAllCourses(CurPage, PageSize);
+        var response = await CourseService.GetAllCourses(CurPage, PageSize, SearchString);
         courses = response.Items;
         HasPreviousPage = !response.HasPreviousPage;
         HasNextPage = !response.HasNextPage;
         TotalPages = response.TotalPages;
+        StateHasChanged();
     }
 
     protected async Task GetCourseData(int i)
@@ -204,5 +214,12 @@ else
     private void JoinCourse(int id)
     {
         NavigationManager.NavigateTo($"course-join/{id}");
+    }
+
+    private async void SearchStringChange()
+    {
+        await GetCourseData();
+        SearchString = string.Empty;
+        StateHasChanged();
     }
 }
