@@ -148,7 +148,11 @@ else
 
     protected async Task GetCourseData()
     {
-        var response = await CourseService.GetAllCourses(CurPage, PageSize, SearchString);
+        DateTime Today = DateTime.Today;
+        DateTime DateFrom = new DateTime(Today.Year, Today.Month, 1); 
+        DateTime DateTo = DateFrom.AddMonths(1).AddDays(-1);
+
+        var response = await CourseService.GetAllCourses(CurPage, PageSize, SearchString, DateFrom, DateTo);
         courses = response.Items;
         HasPreviousPage = !response.HasPreviousPage;
         HasNextPage = !response.HasNextPage;

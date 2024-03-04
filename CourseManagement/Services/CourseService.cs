@@ -110,7 +110,7 @@ namespace CourseManagement.Services
             };
         }
 
-        public async Task<PageResponse<CoursesListModel>> GetAllCourses(int curPage, int pageSize, string searchString)
+        public async Task<PageResponse<CoursesListModel>> GetAllCourses(int curPage, int pageSize, string searchString, DateTime? dateFrom, DateTime? dateTo)
         {
             var courseQuery = _context.Courses.Select(x => new CoursesListModel
             {
@@ -125,6 +125,16 @@ namespace CourseManagement.Services
             if (!string.IsNullOrEmpty(searchString))
             {
                 courseQuery = courseQuery.Where(x => x.CourseTitle.Contains(searchString) || x.CourseTeacher.Contains(searchString));
+            }
+
+            if (dateFrom != null)
+            {
+                courseQuery = courseQuery.Where(x => x.CourseStartDateTime.Date >= dateFrom.Value.Date);
+            }
+
+            if (dateTo != null)
+            {
+                courseQuery = courseQuery.Where(x => x.CourseStartDateTime.Date <= dateTo.Value.Date);
             }
 
             return await PageResponse<CoursesListModel>.CreateAsync(courseQuery, curPage, pageSize);
