@@ -140,6 +140,26 @@ namespace CourseManagement.Services
             return await PageResponse<CoursesListModel>.CreateAsync(courseQuery, curPage, pageSize);
         }
 
+        public async Task<PageResponse<CoursesListModel>> GetAllCourses(int curPage, int pageSize, string searchString)
+        {
+            var courseQuery = _context.Courses.Select(x => new CoursesListModel
+            {
+                Id = x.Id,
+                CourseTitle = x.CourseTitle,
+                CourseStartDateTime = x.CourseStartDateTime,
+                CourseTeacher = x.CourseTeacher,
+                CourseCapacity = $"{x.CourseAttendees.Count}/{x.MaxNumberOfAtendees}",
+                IsCapacityFull = x.CourseAttendees.Count == x.MaxNumberOfAtendees,
+            }).AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                courseQuery = courseQuery.Where(x => x.CourseTitle.Contains(searchString) || x.CourseTeacher.Contains(searchString));
+            }
+
+            return await PageResponse<CoursesListModel>.CreateAsync(courseQuery, curPage, pageSize);
+        }
+
         public async Task<ProcessResponse<CourseNewEditModel>> GetCourseByIdForCreateEdit(int id)
         {
             var course = await _context.Courses.Include(x => x.CourseAttendees).FirstOrDefaultAsync(x => x.Id == id);
