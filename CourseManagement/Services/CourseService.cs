@@ -1,63 +1,266 @@
 ﻿using CourseManagement.DataAccessLayer;
+using CourseManagement.Entities;
+using CourseManagement.Infrastructure;
 using CourseManagement.Models;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
 
 namespace CourseManagement.Services
 {
     public class CourseService : ICourseService
     {
         private readonly ApplicationDbContext _context;
+        private readonly byte[] salt = Encoding.ASCII.GetBytes("opakjogpkjdopajgkoirkjatki");
 
         public CourseService(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        public async Task CreateCourse(Course course)
+        public async Task<bool> CheckCoursePIN(int id, string pin)
         {
-            _context.Courses.Add(course);
-            await _context.SaveChangesAsync();
+            var course = await _context.Courses.FirstOrDefaultAsync(x => x.Id == id);
+            var hashedPin = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                    password: pin,
+                    salt: salt,
+                    prf: KeyDerivationPrf.HMACSHA256,
+                    iterationCount: 100000,
+                    numBytesRequested: 256 / 8));
+
+            return hashedPin == course.EditDeleteCoursePIN;
         }
 
-        public async Task DeleteCourse(int id)
+        public async Task<bool> CheckIfCourseCapacityFull(int id)
+        {
+            var course = await _context.Courses.FindAsync(id);
+            var courseAttendeesCount = await _context.Attendees.Where(x => x.CourseId == id).CountAsync();
+            return courseAttendeesCount + 1 <= course.MaxNumberOfAtendees;
+        }
+
+        public async Task<ProcessResponse> CreateCourse(CourseNewEditModel course)
+        {
+            Course courseToCreate = new Course
+            {
+                CourseTitle = course.CourseTitle,
+                CourseDescription = course.CourseDescription,
+                CourseTeacher = course.CourseTeacher,
+                CourseTeacherEmail = course.CourseTeacherEmail,
+                CourseStartDateTime = course.CourseStartDateTime,
+                MaxNumberOfAtendees = course.MaxNumberOfAtendees,
+
+                EditDeleteCoursePIN = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                    password: course.EditDeleteCoursePIN,
+                    salt: salt,
+                    prf: KeyDerivationPrf.HMACSHA256,
+                    iterationCount: 100000,
+                    numBytesRequested: 256 / 8)),
+            };
+
+            try
+            {
+                _context.Courses.Add(courseToCreate);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return new ProcessResponse
+                {
+                    IsSuccessful = false,
+                    Message = "Failed to create course"
+                };
+            }
+
+            return new ProcessResponse
+            {
+                IsSuccessful = true,
+                Message = "Course successfully created"
+            };
+        }
+
+        public async Task<ProcessResponse> DeleteCourse(int id)
         {
             var courseToDelete = await _context.Courses.FindAsync(id);
             if (courseToDelete == null)
             {
-                throw new Exception("Selected course cannot be found.");
+                return new ProcessResponse
+                {
+                    IsSuccessful = false,
+                    Message = "Selected course cannot be found"
+                };
+            }
+            try
+            {
+                _context.Courses.Remove(courseToDelete);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return new ProcessResponse
+                {
+                    IsSuccessful = false,
+                    Message = "Selected course cannot be deleted"
+                };
             }
 
-            _context.Courses.Remove(courseToDelete);
-            await _context.SaveChangesAsync();
+            return new ProcessResponse
+            {
+                IsSuccessful = true,
+                Message = "Selected course deleted"
+            };
         }
 
-        public async Task<List<Course>> GetAllCourses()
+        public async Task<PageResponse<CoursesListModel>> GetAllCourses(int curPage, int pageSize, string searchString, DateTime? dateFrom, DateTime? dateTo)
         {
-            return await _context.Courses.ToListAsync();
+            var courseQuery = _context.Courses.Select(x => new CoursesListModel
+            {
+                Id = x.Id,
+                CourseTitle = x.CourseTitle,
+                CourseStartDateTime = x.CourseStartDateTime,
+                CourseTeacher = x.CourseTeacher,
+                CourseCapacity = $"{x.CourseAttendees.Count}/{x.MaxNumberOfAtendees}",
+                IsCapacityFull = x.CourseAttendees.Count == x.MaxNumberOfAtendees,
+            }).AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                courseQuery = courseQuery.Where(x => x.CourseTitle.Contains(searchString) || x.CourseTeacher.Contains(searchString));
+            }
+
+            if (dateFrom != null)
+            {
+                courseQuery = courseQuery.Where(x => x.CourseStartDateTime.Date >= dateFrom.Value.Date);
+            }
+
+            if (dateTo != null)
+            {
+                courseQuery = courseQuery.Where(x => x.CourseStartDateTime.Date <= dateTo.Value.Date);
+            }
+
+            return await PageResponse<CoursesListModel>.CreateAsync(courseQuery, curPage, pageSize);
         }
 
-        public async Task<Course> GetCourseById(int id)
+        public async Task<PageResponse<CoursesListModel>> GetAllCourses(int curPage, int pageSize, string searchString)
+        {
+            var courseQuery = _context.Courses.Select(x => new CoursesListModel
+            {
+                Id = x.Id,
+                CourseTitle = x.CourseTitle,
+                CourseStartDateTime = x.CourseStartDateTime,
+                CourseTeacher = x.CourseTeacher,
+                CourseCapacity = $"{x.CourseAttendees.Count}/{x.MaxNumberOfAtendees}",
+                IsCapacityFull = x.CourseAttendees.Count == x.MaxNumberOfAtendees,
+            }).AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                courseQuery = courseQuery.Where(x => x.CourseTitle.Contains(searchString) || x.CourseTeacher.Contains(searchString));
+            }
+
+            return await PageResponse<CoursesListModel>.CreateAsync(courseQuery, curPage, pageSize);
+        }
+
+        public async Task<ProcessResponse<CourseNewEditModel>> GetCourseByIdForCreateEdit(int id)
         {
             var course = await _context.Courses.Include(x => x.CourseAttendees).FirstOrDefaultAsync(x => x.Id == id);
             if (course == null)
             {
-                throw new Exception("Selected course cannot be found.");
+                return new ProcessResponse<CourseNewEditModel>
+                {
+                    IsSuccessful = false,
+                    Message = "Selected course cannot be found",
+                    Data = null
+                };
             }
-            return course;
+
+            var result = new CourseNewEditModel
+            {
+                Id = course.Id,
+                CourseTitle = course.CourseTitle,
+                CourseDescription = course.CourseDescription,
+                CourseTeacher = course.CourseTeacher,
+                CourseTeacherEmail = course.CourseTeacherEmail,
+                CourseStartDateTime = course.CourseStartDateTime,
+                MaxNumberOfAtendees = course.MaxNumberOfAtendees,
+                EditDeleteCoursePIN = string.Empty,
+                CourseAttendees = new List<Attendee>(course.CourseAttendees),
+            };
+
+            return new ProcessResponse<CourseNewEditModel>
+            {
+                IsSuccessful = true,
+                Message = "Selected course displayed",
+                Data = result
+            };
+        }
+        public async Task<ProcessResponse<CourseDetailsModel>> GetCourseDetailsById(int id)
+        {
+            var course = await _context.Courses.FirstOrDefaultAsync(x => x.Id == id);
+            if (course == null)
+            {
+                return new ProcessResponse<CourseDetailsModel>
+                {
+                    IsSuccessful = false,
+                    Message = "Selected course cannot be found",
+                    Data = null
+                };
+            }
+
+            var courseAttendeeCount = await _context.Attendees.Where(x => x.CourseId == id).CountAsync();
+            var result = new CourseDetailsModel
+            {
+                CourseTitle = course.CourseTitle,
+                CourseDescription = course.CourseDescription,
+                CourseTeacher = course.CourseTeacher,
+                CourseTeacherEmail = course.CourseTeacherEmail,
+                CourseStartDateTime = course.CourseStartDateTime,
+                CourseCapacity = $"{courseAttendeeCount}/{course.MaxNumberOfAtendees}"
+            };
+            return new ProcessResponse<CourseDetailsModel>
+            {
+                IsSuccessful = true,
+                Message = "Selected course details displayed",
+                Data = result
+            };
         }
 
-        public async Task UpdateCourse(int id, Course course)
+        public async Task<ProcessResponse> UpdateCourse(int id, CourseNewEditModel course)
         {
             var courseFromDb = await _context.Courses.FindAsync(id);
             if (courseFromDb == null)
             {
-                throw new Exception("Selected course cannot be found");
+                return new ProcessResponse
+                {
+                    IsSuccessful = false,
+                    Message = "Selected course cannot be found"
+                };
             }
-            courseFromDb.CourseTitle = course.CourseTitle;
-            courseFromDb.CourseDescription = course.CourseDescription;
-            courseFromDb.CourseStartDateTime = course.CourseStartDateTime;
 
-            await _context.SaveChangesAsync();
+            if (await CheckCoursePIN(id, course.EditDeleteCoursePIN))
+            {
+                courseFromDb.CourseTitle = course.CourseTitle;
+                courseFromDb.CourseDescription = course.CourseDescription;
+                courseFromDb.CourseTeacher = course.CourseTeacher;
+                courseFromDb.CourseTeacherEmail = course.CourseTeacherEmail;
+                courseFromDb.CourseStartDateTime = course.CourseStartDateTime;
+                courseFromDb.MaxNumberOfAtendees = course.MaxNumberOfAtendees;
+
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                return new ProcessResponse
+                {
+                    IsSuccessful = false,
+                    Message = "Incorrect PIN! Course update failed"
+                };
+            }
+
+            return new ProcessResponse
+            {
+                IsSuccessful = true,
+                Message = "Selected course updated"
+            };
         }
     }
 }

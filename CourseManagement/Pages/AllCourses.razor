@@ -1,22 +1,12 @@
-﻿@page "/"
+﻿@page "/all-courses"
 @inject ICourseService CourseService
 @inject NavigationManager NavigationManager
 @inject IToastService ToastService
 
 <PageTitle>Index</PageTitle>
 
-<div style="display: flex">
-    <h1 style="margin: 0">
-        This month's courses
-    </h1>
-    <button class="btn btn-primary" @onclick="(() => CreateCourse())" style="margin-left: auto">
-        Create new course
-    </button>
-</div>
-<hr />
-
 <div style="margin:0 auto; width:50%; text-align:center;">
-    <input style="width:60%;" type="text" @bind-value="SearchString"/>
+    <input style="width:60%;" type="text" @bind-value="SearchString" />
     <button class="btn btn-primary" @onclick="(() => SearchStringChange())">
         Search
     </button>
@@ -97,7 +87,7 @@ else
 
 <PINConfirmationDialog @ref="child" OnClose="@PINConfirmationDialogClose"></PINConfirmationDialog>
 
-@code
+@code 
 {
     PINConfirmationDialog child;
 
@@ -115,7 +105,7 @@ else
     {
         if (result.IsDialogOk)
         {
-            if(result.InsertedPIN == null)
+            if (result.InsertedPIN == null)
             {
                 ToastService.ShowError("PIN was not inserted!");
             }
@@ -123,7 +113,7 @@ else
             {
                 if (await CourseService.CheckCoursePIN(result.CourseId, result.InsertedPIN))
                 {
-                    if(result.AfterDialogActionType == "edit")
+                    if (result.AfterDialogActionType == "edit")
                     {
                         NavigationManager.NavigateTo($"course-edit/{result.CourseId}");
                     }
@@ -148,11 +138,7 @@ else
 
     protected async Task GetCourseData()
     {
-        DateTime Today = DateTime.Today;
-        DateTime DateFrom = new DateTime(Today.Year, Today.Month, 1); 
-        DateTime DateTo = DateFrom.AddMonths(1).AddDays(-1);
-
-        var response = await CourseService.GetAllCourses(CurPage, PageSize, SearchString, DateFrom, DateTo);
+        var response = await CourseService.GetAllCourses(CurPage, PageSize, SearchString);
         courses = response.Items;
         HasPreviousPage = !response.HasPreviousPage;
         HasNextPage = !response.HasNextPage;
@@ -174,7 +160,7 @@ else
 
     protected async Task PreviousPage()
     {
-        if(CurPage > 1)
+        if (CurPage > 1)
         {
             CurPage--;
             await GetCourseData();

@@ -32,27 +32,52 @@
     [Parameter]
     public int CourseId { get; set; }
 
-    Attendee attendee = new Attendee();
+    AttendeeModel attendee = new AttendeeModel();
 
-    Course course = new Course();
+    CourseDetailsModel course = new CourseDetailsModel();
 
     protected override async Task OnParametersSetAsync()
     {
-        course = await CourseService.GetCourseById(CourseId);
+        var response = await CourseService.GetCourseDetailsById(CourseId);
+        if (response.IsSuccessful)
+        {
+            ToastService.ShowSuccess(response.Message);
+            course = response.Data;
+        }
+        else
+        {
+            ToastService.ShowError(response.Message);
+        }
+
         attendee.CourseId = CourseId;
     }
 
     private async Task HandleSubmit()
     {
-        if(await AttendeeService.CheckIfAttendeeExists(CourseId, attendee.FirstName, attendee.LastName, attendee.Email) == false)
+        if (await CourseService.CheckIfCourseCapacityFull(CourseId))
         {
-            await AttendeeService.CreateAttendee(attendee);
-            ToastService.ShowSuccess("Attendee was succesfully created!");
-            NavigationManager.NavigateTo("/");
+            if (await AttendeeService.CheckIfAttendeeExists(CourseId, attendee.FirstName, attendee.LastName, attendee.Email) == false)
+            {
+                var response = await AttendeeService.CreateAttendee(attendee);
+                if (response.IsSuccessful)
+                {
+                    ToastService.ShowSuccess(response.Message);
+                    NavigationManager.NavigateTo("/");
+                }
+                else
+                {
+                    ToastService.ShowError(response.Message);
+                }
+            }
+            else
+            {
+                ToastService.ShowError("Attendee already exists");
+            }
         }
         else
         {
-            ToastService.ShowError("Attendee already exists!");
+            ToastService.ShowError("Course already full");
+            NavigationManager.NavigateTo("/");
         }
     }
 }
